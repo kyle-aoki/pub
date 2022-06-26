@@ -8,10 +8,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/kyle-aoki/uu"
 )
 
 func main() {
-	defer mainRecover()
+	defer uu.MainRecover()
 
 	args := os.Args[1:]
 	if len(args) < 1 {
@@ -27,7 +29,7 @@ func main() {
 	}
 	
 	pwd, err := os.Getwd()
-	mustExec(err)
+	uu.MustExec(err)
 	log.Println("pwd:", pwd)
 
 	baseDir := filepath.Base(pwd)
@@ -49,14 +51,14 @@ func main() {
 	programName := strings.Replace(fileName, ".go", "", 1) // program
 
 	contents, err := ioutil.ReadFile(join(workbenchDir, fileName))
-	mustExec(err)
+	uu.MustExec(err)
 
 	fileFunc := fmt.Sprintf("func %s()", programName)
 
 	updatedContents := strings.Replace(string(contents), fileFunc, "func main()", 1)
 
 	err = ioutil.WriteFile(join(workbenchDir, "main.go"), []byte(updatedContents), 0777)
-	mustExec(err)
+	uu.MustExec(err)
 
 	CMD("rm", "-rf", join(workbenchDir, fileName)) // delete program.go
 
@@ -64,10 +66,10 @@ func main() {
 	cmd := exec.Command("go", "build", ".")
 	cmd.Dir = workbenchDir
 	err = cmd.Run()
-	mustExec(err)
+	uu.MustExec(err)
 
 	home, err := os.UserHomeDir()
-	mustExec(err)
+	uu.MustExec(err)
 
 	mod := getModuleName(workbenchDir)
 	CMD("mv", join(workbenchDir, mod), join(home, "bin", programName))
@@ -78,7 +80,7 @@ func CMD(name string, arg ...string) {
 	log.Println(name, strings.Join(arg, " "))
 	cmd := exec.Command(name, arg...)
 	err := cmd.Run()
-	mustExec(err)
+	uu.MustExec(err)
 }
 
 func join(elem ...string) string {
@@ -88,7 +90,7 @@ func join(elem ...string) string {
 func getModuleName(pubDir string) string {
 	moduleFile := join(pubDir, "go.mod")
 	bs, err := ioutil.ReadFile(moduleFile)
-	mustExec(err)
+	uu.MustExec(err)
 	s := string(bs)
 	lines := strings.Split(s, "\n")
 	for i := range lines {
